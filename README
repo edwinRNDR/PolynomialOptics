@@ -1,0 +1,113 @@
+Polynomial Optics Code Package
+==============================
+
+(C) 2012, Matthias Hullin <hullin@cs.ubc.ca>
+(University of British Columbia)
+(C) 2012, Johannes Hanika <hanatos@gmail.com>
+(Weta Digital)
+
+
+0. WHAT IS THIS?
+
+Our EGSR 2012 paper on Polynomial Optics provides an alternative
+approach to approximative ray-tracing through optical systems. This
+package contains a C++ library consisting of templated classes for the
+manipulation of polynomials, a set of predefined optical elements, for
+instance for spherical and cylindrical surfaces, as well as a database
+of recent and historic glasses.
+
+Please find the latest version of the package on the project website, 
+http://www.cs.ubc.ca/labs/imager/tr/2012/PolynomialOptics/
+
+
+1. LIST OF FILES
+
+README - this file
+Makefile
+Example_BasicArithmetic.cpp (PD)
+Example_PostprocessImage.cpp (PD)
+InputPFM/night2.pfm
+OpticalElements/Cylindrical5.hh      
+OpticalElements/FindFocus.hh	     
+OpticalElements/OpticalMaterial.hh   
+OpticalElements/PointToPupil5.hh
+OpticalElements/Propagation5.hh
+OpticalElements/Spherical5.hh
+OpticalElements/TwoPlane5.hh
+TruncPoly/TruncPolySystem.hh
+include/spectrum.h
+include/CImg.h (CeCILL-C)
+
+
+2. LICENSE / TERMS OF USE
+
+No warranty is offered or implied; use this code at your own risk.
+Unless otherwise marked in the LIST OF FILES, the code is provided
+under the following BSD-ish license:
+
+ * Feel free to do what you want with this code, as long as the
+ * copyright information from the file header remains intact. Needless
+ * to say, we appreciate proper attribution of our work, be it through
+ * citation of our EGSR 2012 paper, movie credits, or otherwise.
+
+Just in case you end up using the code in your research work, here's the
+BibTeX citation:
+
+@article{PolynomialOptics-Hullin2012, 
+    author = {Matthias B. Hullin and Johannes Hanika and Wolfgang Heidrich}, 
+    title = {{Polynomial Optics}: 
+             A Construction Kit for Efficient Ray-Tracing of Lens Systems}, 
+    journal = {Computer Graphics Forum (Proceedings of EGSR 2012)},
+    volume = {31},
+    number = {4},
+    year = {2012},
+    month = jul,
+}
+
+We'd love to see this code and/or data used in production! We're also
+prepared to allow the use of the code in free software products. In
+either case, just drop a line to Matthias <hullin@cs.ubc.ca>.
+
+CImg.h is an unmodified copy of the CImg library by David Tschumperl'e
+and many others, provided under the CeCILL-C license. Files marked
+(PD) are in the public domain.
+
+
+3. USAGE / DESCRIPTION
+
+We provide a GNU Makefile for a gcc build environment. No additional
+libraries are needed.
+
+From the working directory where this README file is located, compile
+the code examples by calling
+
+  make
+
+Then execute the binaries:
+
+  bin/ex0-basicarithmetic
+  bin/ex1-postprocess
+
+
+The Basic Arithmetic example demonstrates some, well, basic
+arithmetic. Have a look into Example_BasicArithmetic.cpp to get an
+idea of what the library can do.
+
+The Postprocess example takes a portable floatmap image, and re-traces
+it through an achromatic lens to obtain what is Figure 13 in the
+paper. The input image InputPFM/night2.pfm must be present for this
+example to run correctly. Should your package not contain it, download
+it separately on the project homepage (see top of this README
+file). The output files, written to sub-folder output/, are also in
+the PFM format, which can be read by ImageMagick, Adobe Photoshop and
+pretty much any HDR-capable image viewer out there. Alternatively,
+CImg can also export images to low dynamic range formats such as PNG
+(see CImg documentation for details).
+
+If you would like to contribute another example, we'll be more than
+happy to include it in a future version of this package.
+
+
+4. FINAL REMARKS
+
+Enjoy!
