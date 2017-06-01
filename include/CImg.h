@@ -375,11 +375,11 @@ extern "C" {
 //
 // OpenEXR can be used to read/write .exr file formats.
 #ifdef cimg_use_openexr
-#include "ImfRgbaFile.h"
-#include "ImfInputFile.h"
-#include "ImfChannelList.h"
-#include "ImfMatrixAttribute.h"
-#include "ImfArray.h"
+#include <ImfRgbaFile.h>
+#include <ImfInputFile.h>
+#include <ImfChannelList.h>
+#include <ImfMatrixAttribute.h>
+#include <ImfArray.h>
 #endif
 
 // Lapack configuration.

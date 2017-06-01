@@ -12,7 +12,9 @@ HEADERS=\
 ./OpticalElements/TwoPlane5.hh
 
 LDFLAGS=-lm
-CXXFLAGS=-fPIC -D_REENTRANT -D_THREAD_SAFE -D_GNU_SOURCE
+LDFLAGS+=${shell pkg-config OpenEXR --libs}
+CXXFLAGS=-fPIC -D_REENTRANT -D_THREAD_SAFE -D_GNU_SOURCE -Dcimg_use_openexr
+CXXFLAGS+=${shell pkg-config OpenEXR --cflags}
 CXXFLAGS+=-I. -ITruncPoly -IOpticalElements -Iinclude -g -Wall -fno-strict-aliasing
 
 # Define this if not debugging:
