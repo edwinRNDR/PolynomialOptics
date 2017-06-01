@@ -69,56 +69,71 @@ Transform4f get_system(float lambda, int degree = 3) {
 
 int main(int argc, char *argv[]) {
 
-  int degree = 3;
-  if (argc >= 2) degree = atol(argv[1]);
+
+  if (argc < 3) {
+      printf("usage: %s <infile.pfm> <outfile.pfm> [exposure :1.0] [degree :3] [sample-mul :1000] [entrance :19.5] [lambda-count :12] [filter-size :1]\n", argv[0]);
+      exit(1);
+  }
+
+    FILE *fp = std::fopen(argv[1],"r");
+    if (!fp) {
+        cerr << argv[1] << " not found";
+        exit(1);
+    } else {
+        std::fclose(fp);
+    }
+
+    float exposure = 1.0;
+    if (argc >= 4) exposure = atof(argv[3]);
+
+
+    int degree = 3;
+    if (argc >= 5) degree = atol(argv[4]);
+
 
   float sample_mul = 1000;
-  if (argc >= 3) sample_mul = atof(argv[2]);
-  cout << "sample_mul: "<<sample_mul<<endl;
+  if (argc >= 6) sample_mul = atof(argv[5]);
 
   float r_entrance = 19.5;
-  if (argc >= 4) r_entrance = atof(argv[3]);
+  if (argc >= 7) r_entrance = atof(argv[6]);
 
   int num_lambdas = 12;
-  if (argc >= 5) num_lambdas = atol(argv[4]);
+  if (argc >= 8) num_lambdas = atol(argv[7]);
 
   int filter_size = 1;
-  if (argc >= 6) filter_size = atol(argv[5]);
+  if (argc >= 9) filter_size = atol(argv[8]);
 
-  int frame_from = 0;
-  if (argc >= 7) frame_from = atol(argv[6]);
 
-  int frame_to = 199;
-  if (argc >= 8) frame_to = atol(argv[7]);
+  const float lambda_from = 440;
+  const float lambda_to = 660;
 
-  // Paper figure 13: frame 26 and 299. Homepage also shows frame 216. 
-  int frame_list[3] = {26, 216, 299}; 
+    cout << "-- config: " << endl;
+    cout << "exposure: " << exposure << endl;
+    cout << "sample-mul: " << sample_mul << endl;
+    cout << "entrance: " << r_entrance << endl;
+
+    cout << "lambda-count: " << num_lambdas << endl;
+    cout << "lambda-from: " << lambda_from << endl;
+    cout << "lambda-to: " << lambda_to << endl;
+
+    cout << "filter-size: " << filter_size << endl;
 
   // Sensor scaling
   const float sensor_width = 36;
   const int sensor_xres = 1920;
   const int sensor_yres = 1080;
   const float sensor_scaling = sensor_xres / sensor_width;
-  cout << "Sensor scaling: "<< sensor_scaling << endl;
+  cout << "sensor scaling: "<< sensor_scaling << endl;
 
-  const float lambda_from = 440;
-  const float lambda_to = 660;
 
-  CImg<float> img_in("InputPFM/night2.pfm");
+  CImg<float> img_in(argv[1]);
   int width = img_in.width();
   int height = img_in.height();
 
-  for (int frame_idx = 0; frame_idx < 3; ++frame_idx) {
-    int frame = frame_list[frame_idx];
-  
-  // Alternatively, render a full video sequence:
-  //for (int frame = frame_from; frame <= frame_to; ++frame) {
+    cout << "opened image with dimensions: " << width << "*" << height << endl;
 
-    cout << endl << endl << "[[ FRAME "<<frame<<" ]]"<<endl<<"=============="<<endl;
     float r_pupil = r_entrance;
-    if (frame < 100) r_pupil = 0.1*sqrt(1.f+frame) * r_entrance;
-    cout << "Pupil radius: "<<r_pupil<<endl;
-    
+
     // Focus on 550nm
     Transform4f system = get_system(550, degree);
 
@@ -127,11 +142,11 @@ int main(int argc, char *argv[]) {
     cout << "Focus: " << d3 << endl;
     // Compute magnification and output equation system
     float magnification = get_magnification_X(system >> propagate_5(d3));
-    cout << "Magnification: " << magnification << endl;
+    cout << "magnification: " << magnification << endl;
     //cout << "System: " << system << endl<<endl;
 
     // Add that propagation, plus a little animated defocus to the overall system;
-    Transform4f prop = propagate_5(d3 - ((frame>=100)?(0.02*(frame-100)):0), degree);
+    Transform4f prop = propagate_5(d3, degree);
     system = system >> prop;
 
     CImg<float> img_out(sensor_xres, sensor_yres, 1, 3, 0);
@@ -162,7 +177,6 @@ int main(int argc, char *argv[]) {
     // Support of an input image pixel in world plane
     float pixel_size = sensor_width/(float)width/magnification;
 
-
     for (int ll = 0; ll < num_lambdas; ++ll) {
       float lambda = lambda_from + (lambda_to - lambda_from) * (ll / (float)(num_lambdas-1));
       if (num_lambdas == 1) lambda = 550;
@@ -188,14 +202,18 @@ int main(int argc, char *argv[]) {
 	
 	  // Sample intensity at wavelength lambda from source image
 	  const float rgbin[3] = {
-	    img_in.linear_atXY(i, j, 0, 0, 0),
-	    img_in.linear_atXY(i, j, 0, 1, 0),
-	    img_in.linear_atXY(i, j, 0, 2, 0)};
+	    exposure * img_in.linear_atXY(i, j, 0, 0, 0),
+	    exposure * img_in.linear_atXY(i, j, 0, 1, 0),
+	    exposure * img_in.linear_atXY(i, j, 0, 2, 0)};
 	  float L_in = spectrum_rgb_to_p(lambda, rgbin);
 
 	  // Quasi-importance sampling: 
 	  // pick number of samples according to pixel intensity
+
 	  int num_samples = max(1,(int)(L_in * sample_mul));
+
+
+
 	  float sample_weight = L_in / num_samples;
 	
 	  // With that, we can now start sampling the aperture:
@@ -245,13 +263,12 @@ int main(int argc, char *argv[]) {
 	img_out.atXY(i,j,0,1) = max(img_out.atXY(i,j,0,1), 0.02f*max_value);
 	img_out.atXY(i,j,0,2) = max(img_out.atXY(i,j,0,2), 0.02f*max_value);
 
-      } 
+      }
 
-    char fn[256];
-    sprintf(fn,"OutputPFM/night2-frame%03d.pfm",frame);
-    img_out.save(fn);
 
-  }
+    img_out.save(argv[2]);
+
+
 
 }
 
