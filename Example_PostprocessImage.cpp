@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
 
   if (argc < 3) {
-      printf("usage: %s <infile.pfm> <outfile.pfm> [exposure :1.0] [degree :3] [sample-mul :1000] [entrance :19.5] [lambda-count :12] [filter-size :1]\n", argv[0]);
+      printf("usage: %s <infile.pfm> <outfile.pfm> [exposure :1.0] [degree :3] [sample-mul :1000] [entrance :19.5] [defocus :0.0] [lambda-count :12] [filter-size :1]\n", argv[0]);
       exit(1);
   }
 
@@ -91,17 +91,23 @@ int main(int argc, char *argv[]) {
     if (argc >= 5) degree = atol(argv[4]);
 
 
+
+
   float sample_mul = 1000;
   if (argc >= 6) sample_mul = atof(argv[5]);
 
   float r_entrance = 19.5;
   if (argc >= 7) r_entrance = atof(argv[6]);
 
-  int num_lambdas = 12;
-  if (argc >= 8) num_lambdas = atol(argv[7]);
+
+  float defocus = 0.0;
+  if (argc >= 8) defocus = atof(argv[7]);
+
+    int num_lambdas = 12;
+  if (argc >= 9) num_lambdas = atol(argv[8]);
 
   int filter_size = 1;
-  if (argc >= 9) filter_size = atol(argv[8]);
+  if (argc >= 10) filter_size = atol(argv[9]);
 
 
   const float lambda_from = 440;
@@ -111,7 +117,7 @@ int main(int argc, char *argv[]) {
     cout << "exposure: " << exposure << endl;
     cout << "sample-mul: " << sample_mul << endl;
     cout << "entrance: " << r_entrance << endl;
-
+    cout << "defocus:" << defocus << endl;
     cout << "lambda-count: " << num_lambdas << endl;
     cout << "lambda-from: " << lambda_from << endl;
     cout << "lambda-to: " << lambda_to << endl;
@@ -139,7 +145,9 @@ int main(int argc, char *argv[]) {
 
     // Determine back focal length from degree-1 terms (matrix optics)
     float d3 = find_focus_X(system);
-    cout << "Focus: " << d3 << endl;
+    cout << "system focus: " << d3 << endl;
+    d3 += defocus;
+    cout << "effective focus: " << d3 << endl;
     // Compute magnification and output equation system
     float magnification = get_magnification_X(system >> propagate_5(d3));
     cout << "magnification: " << magnification << endl;
@@ -209,10 +217,7 @@ int main(int argc, char *argv[]) {
 
 	  // Quasi-importance sampling: 
 	  // pick number of samples according to pixel intensity
-
 	  int num_samples = max(1,(int)(L_in * sample_mul));
-
-
 
 	  float sample_weight = L_in / num_samples;
 	
@@ -250,6 +255,7 @@ int main(int argc, char *argv[]) {
 	  }
 	}
       }
+      cout << endl;
     }
 
 
@@ -267,7 +273,7 @@ int main(int argc, char *argv[]) {
 
 
     img_out.save(argv[2]);
-
+    cout << "done!" << endl;
 
 
 }
