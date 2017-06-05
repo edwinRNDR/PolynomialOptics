@@ -126,7 +126,7 @@ Transform4f get_system_from_file(char *filename, float lambda, int degree = 3) {
 
 int main(int argc, char *argv[]) {
 
-    if (argc < 3) {
+    if (argc < 2) {
         showUsage(argv[0]);
         // printf("usage: %s <infile.pfm> <outfile.pfm> [exposure :1.0] [degree :3] [sample-mul :1000] [entrance :19.5] [defocus :0.0] [lambda-count :12] [filter-size :1]\n", argv[0]);
         exit(1);
@@ -148,12 +148,14 @@ int main(int argc, char *argv[]) {
     int filter_size = 1;
     float exposure = 1.0;
 
+	const char *out_file = "out.exr";
+
     char *system_definition_file = 0;
 
     char tmp;
 
     if (argc >= 4) {
-        while ((tmp = getopt(argc - 2, &argv[2], "c:d:e:f:r:s:x:i:")) != -1) {
+        while ((tmp = getopt(argc - 1, &argv[1], "c:d:e:f:o:p:s:x:i:")) != -1) {
             switch (tmp) {
                 case 'c'://curve(degree)
                     degree = atol(optarg);
@@ -171,7 +173,11 @@ int main(int argc, char *argv[]) {
                     filter_size = atol(optarg);
                     break;
 
-                case 'r'://rays(lambda)
+				case 'o'://out render file
+                    out_file = optarg;
+                    break;
+
+                case 'p'://lambda passes
                     num_lambdas = atol(optarg);
                     break;
 
@@ -361,7 +367,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    img_out.save(argv[2]);
+    img_out.save(out_file);
     cout << "done!" << endl;
 }
 
@@ -374,7 +380,8 @@ void showUsage(char *s) {
     cout << "         " << "-d defocus" << endl;
     cout << "         " << "-e entrance" << endl;
     cout << "         " << "-f filter" << endl;
-    cout << "         " << "-r rays/lambda" << endl;
+    cout << "         " << "-o output file" << endl;
+    cout << "         " << "-p lambda passes" << endl;
     cout << "         " << "-s samples" << endl;
     cout << "         " << "-x exposure" << endl;
     cout << "         " << "-i .lens file" << endl;
