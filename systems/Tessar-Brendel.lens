@@ -1,0 +1,14 @@
+two_plane 5000000
+refract_spherical 42.97 1.0 N-LAK9
+propagate 9.80
+refract_spherical -115.33 N-LAK9 1.549
+propagate 2.10
+refract_spherical 306.84 1.549 1.0
+propagate 4.16
+refract_spherical -59.06 1.0 1.64
+propagate 1.87
+refract_spherical 40.93 1.64 1.0
+propagate 10.64
+refract_spherical 182.92 1.0 N-LAK9
+propagate 7.05
+refract_spherical -48.91 N-LAK9 1.0

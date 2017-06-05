@@ -118,6 +118,8 @@ Transform4f get_system_from_file(char *filename, float lambda, int degree = 3) {
             system = system >> propagate_5(d, degree);
             //cout << "propagate" << " " << d << endl;
 
+        } else {
+            cout << "invalid op: " << op << endl;
         }
     }
     return system;
