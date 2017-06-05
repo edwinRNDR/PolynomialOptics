@@ -1,0 +1,18 @@
+two_plane 5000000
+refract_spherical 65.22 1.0 N-SSK8
+propagate 9.60
+refract_spherical -62.03 N-SSK8 N-SF10
+propagate 4.20
+refract_spherical -1240.67 N-SF10 1.0
+propagate 9.60
+refract_spherical -62.03 N-SSK8 N-SF10
+propagate 4.20
+refract_spherical -2240.67 N-SF10 1.0
+propagate 19.60
+refract_spherical -62.03 N-SSK8 N-SF10
+propagate 44.20
+refract_spherical 40.67 N-SF10 1.0
+propagate 59.60
+refract_spherical -62.03 N-SSK8 N-SF10
+propagate 24.20
+refract_spherical 440.67 N-SF10 1.0
