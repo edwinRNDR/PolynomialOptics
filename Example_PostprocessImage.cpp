@@ -96,7 +96,7 @@ Transform4f get_system_from_file(char *filename, float lambda, int degree) {
             float n2 = 1.0f;
 
             if (glassName1[0] >= '0' && glassName1[0] <= '9') {
-                 n1 = atof(glassName1.c_str());
+                n1 = atof(glassName1.c_str());
 
             } else {
                 OpticalMaterial glass1(glassName1.c_str());
@@ -128,6 +128,8 @@ Transform4f get_system_from_file(char *filename, float lambda, int degree) {
 
 int main(int argc, char *argv[]) {
 
+
+
     if (argc < 2) {
         showUsage(argv[0]);
         // printf("usage: %s <infile.pfm> <outfile.pfm> [exposure :1.0] [degree :3] [sample-mul :1000] [entrance :19.5] [defocus :0.0] [lambda-count :12] [filter-size :1]\n", argv[0]);
@@ -142,6 +144,7 @@ int main(int argc, char *argv[]) {
         std::fclose(fp);
     }
 
+    int blade_count = 0;
     int degree = 3;
     float sample_mul = 1000;
     float r_entrance = 19.5;
@@ -150,14 +153,14 @@ int main(int argc, char *argv[]) {
     int filter_size = 1;
     float exposure = 1.0;
 
-	const char *out_file = "out.exr";
+    const char *out_file = "out.exr";
 
     char *system_definition_file = 0;
 
     char tmp;
 
     if (argc >= 4) {
-        while ((tmp = getopt(argc - 1, &argv[1], "c:d:e:f:o:p:s:x:i:")) != -1) {
+        while ((tmp = getopt(argc - 1, &argv[1], "c:d:e:f:o:p:s:x:i:b:")) != -1) {
             switch (tmp) {
                 case 'c'://curve(degree)
                     degree = atol(optarg);
@@ -175,7 +178,7 @@ int main(int argc, char *argv[]) {
                     filter_size = atol(optarg);
                     break;
 
-				case 'o'://out render file
+                case 'o'://out render file
                     out_file = optarg;
                     break;
 
@@ -193,6 +196,10 @@ int main(int argc, char *argv[]) {
 
                 case 'i'://system definition
                     system_definition_file = strdup(optarg);
+                    break;
+
+                case 'b'://system definition
+                    blade_count = atoi(optarg);
                     break;
 
                 default:
@@ -214,7 +221,7 @@ int main(int argc, char *argv[]) {
     cout << "lambda-from: " << lambda_from << endl;
     cout << "lambda-to: " << lambda_to << endl;
     cout <<
-    cout << "filter-size: " << filter_size << endl;
+         cout << "filter-size: " << filter_size << endl;
 
     // Sensor scaling
     const float sensor_width = 36;
@@ -239,20 +246,21 @@ int main(int argc, char *argv[]) {
     float r_pupil = r_entrance;
 
     // Focus on 550nm
-    Transform4f system = system_definition_file? get_system_from_file(system_definition_file, 550, degree) : get_system(550, degree);
+    Transform4f system = system_definition_file ? get_system_from_file(system_definition_file, 550, degree)
+                                                : get_system(550, degree);
 
 
     // Determine back focal length from degree-1 terms (matrix optics)
     float d3 = find_focus_X(system);
     cout << "system focus: " << d3 << endl;
-    cout << "effective focus: " << (d3+defocus) << endl;
+    cout << "effective focus: " << (d3 + defocus) << endl;
     // Compute magnification and output equation system
     float magnification = get_magnification_X(system >> propagate_5(d3));
     cout << "magnification: " << magnification << endl;
     //cout << "System: " << system << endl<<endl;
 
     // Add that propagation, plus a little animated defocus to the overall system;
-    Transform4f prop = propagate_5(d3+defocus, degree);
+    Transform4f prop = propagate_5(d3 + defocus, degree);
     system = system >> prop;
 
     CImg<float> img_out(sensor_xres, sensor_yres, 1, 3, 0);
@@ -267,8 +275,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Sample optical system at two spectral locations
-    Transform4d system_spectral_center = (system_definition_file? get_system_from_file(system_definition_file, 500, 3) : get_system(500, 3)) >> prop;
-    Transform4d system_spectral_right = (system_definition_file? get_system_from_file(system_definition_file, 600, degree) : get_system(600, degree)) >> prop;
+    Transform4d system_spectral_center =
+            (system_definition_file ? get_system_from_file(system_definition_file, 500, 3) : get_system(500, 3))
+                    >> prop;
+    Transform4d system_spectral_right =
+            (system_definition_file ? get_system_from_file(system_definition_file, 600, degree) : get_system(600,
+                                                                                                             degree))
+                    >> prop;
 
     // Obtain (xyworld + xyaperture + lambda) -> (ray) mapping including chromatic effects,
     // by linear interpolation of the two sample systems drawn above
@@ -282,6 +295,17 @@ int main(int argc, char *argv[]) {
 
     // Support of an input image pixel in world plane
     float pixel_size = sensor_width / (float) width / magnification;
+
+
+
+    float blade_positions[blade_count * 2];
+
+    for (int b = 0; b < blade_count; ++b) {
+        blade_positions[b * 2] = std::cos(b * 3.141596535 * 2.0 / blade_count) * r_pupil;
+        blade_positions[b * 2 + 1] = std::sin(b * 3.141596535 * 2.0 / blade_count) * r_pupil;
+        cout << blade_positions[b * 2] << " " << blade_positions[b * 2 + 1] << endl;
+    }
+
 
     for (int ll = 0; ll < num_lambdas; ++ll) {
         float lambda = lambda_from + (lambda_to - lambda_from) * (ll / (float) (num_lambdas - 1));
@@ -324,10 +348,41 @@ int main(int argc, char *argv[]) {
 
                     // Rejection-sample points from lens aperture:
                     float x_ap, y_ap;
-                    do {
-                        x_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
-                        y_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
-                    } while (x_ap * x_ap + y_ap * y_ap > r_pupil * r_pupil );
+
+                    if (blade_count == 0) {
+                        do {
+                            x_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
+                            y_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
+                        } while (x_ap * x_ap + y_ap * y_ap > r_pupil * r_pupil);
+                    }
+                    else {
+                        bool inside;
+                        do {
+                            inside = true;
+                            x_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
+                            y_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
+
+                            for (int b = 0; b < blade_count; ++b) {
+                                float bx = blade_positions[((b + 1) % blade_count) * 2] - blade_positions[b * 2];
+                                float by =
+                                        blade_positions[((b + 1) % blade_count) * 2 + 1] - blade_positions[b * 2 + 1];
+
+                                float px = x_ap - blade_positions[b * 2];
+                                float py = y_ap - blade_positions[b * 2 + 1];
+
+
+                                float det = (px * by) - (py * bx); //bx * py - px * by;
+                                if (det > 0) {
+
+                                    inside = false;
+                                    break;
+                                }
+                            }
+
+
+                        } while (!inside);
+                    }
+
 
                     float in[5], out[4];
 
