@@ -37,7 +37,7 @@ using namespace cimg_library;
 
 void showUsage(char *s);
 
-Transform4f get_system(float lambda, int degree = 3) {
+Transform4f get_system(float lambda, int degree) {
     // Let's simulate Edmund Optics achromat #NT32-921:
     /* Clear Aperture CA (mm) 	39.00
     Eff. Focal Length EFL (mm) 	120.00
@@ -69,7 +69,7 @@ Transform4f get_system(float lambda, int degree = 3) {
             >> refract_spherical_5(R3, glass2.get_index(lambda), 1.f, degree);
 }
 
-Transform4f get_system_from_file(char *filename, float lambda, int degree = 3) {
+Transform4f get_system_from_file(char *filename, float lambda, int degree) {
     std::ifstream infile(filename);
     std::string line;
 
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
     cout << "lambda-count: " << num_lambdas << endl;
     cout << "lambda-from: " << lambda_from << endl;
     cout << "lambda-to: " << lambda_to << endl;
-
+    cout <<
     cout << "filter-size: " << filter_size << endl;
 
     // Sensor scaling
@@ -234,6 +234,8 @@ int main(int argc, char *argv[]) {
         cout << "system definition file: " << system_definition_file << endl;
     }
 
+
+    cout << " degree: " << degree << endl;
     float r_pupil = r_entrance;
 
     // Focus on 550nm
@@ -243,15 +245,14 @@ int main(int argc, char *argv[]) {
     // Determine back focal length from degree-1 terms (matrix optics)
     float d3 = find_focus_X(system);
     cout << "system focus: " << d3 << endl;
-    d3 += defocus;
-    cout << "effective focus: " << d3 << endl;
+    cout << "effective focus: " << (d3+defocus) << endl;
     // Compute magnification and output equation system
     float magnification = get_magnification_X(system >> propagate_5(d3));
     cout << "magnification: " << magnification << endl;
     //cout << "System: " << system << endl<<endl;
 
     // Add that propagation, plus a little animated defocus to the overall system;
-    Transform4f prop = propagate_5(d3, degree);
+    Transform4f prop = propagate_5(d3+defocus, degree);
     system = system >> prop;
 
     CImg<float> img_out(sensor_xres, sensor_yres, 1, 3, 0);
@@ -266,7 +267,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Sample optical system at two spectral locations
-    Transform4d system_spectral_center = (system_definition_file? get_system_from_file(system_definition_file, 500, degree) : get_system(500, degree)) >> prop;
+    Transform4d system_spectral_center = (system_definition_file? get_system_from_file(system_definition_file, 500, 3) : get_system(500, 3)) >> prop;
     Transform4d system_spectral_right = (system_definition_file? get_system_from_file(system_definition_file, 600, degree) : get_system(600, degree)) >> prop;
 
     // Obtain (xyworld + xyaperture + lambda) -> (ray) mapping including chromatic effects,
@@ -326,7 +327,7 @@ int main(int argc, char *argv[]) {
                     do {
                         x_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
                         y_ap = (rand() / (float) RAND_MAX - 0.5) * 2 * r_pupil;
-                    } while (x_ap * x_ap + y_ap * y_ap > r_pupil * r_pupil);
+                    } while (x_ap * x_ap + y_ap * y_ap > r_pupil * r_pupil );
 
                     float in[5], out[4];
 
