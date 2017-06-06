@@ -145,6 +145,7 @@ int main(int argc, char *argv[]) {
     }
 
     int blade_count = 0;
+	int anamorphic = 1;
     int degree = 3;
     float sample_mul = 1000;
     float r_entrance = 19.5;
@@ -160,8 +161,17 @@ int main(int argc, char *argv[]) {
     char tmp;
 
     if (argc >= 4) {
-        while ((tmp = getopt(argc - 1, &argv[1], "c:d:e:f:o:p:s:x:i:b:")) != -1) {
+        while ((tmp = getopt(argc - 1, &argv[1], "a:b:c:d:e:f:o:p:s:x:i:")) != -1) {
             switch (tmp) {
+
+				case 'a'://system definition
+                    anamorphic = atoi(optarg);
+                    break;
+
+                case 'b'://system definition
+                    blade_count = atoi(optarg);
+                    break;
+
                 case 'c'://curve(degree)
                     degree = atol(optarg);
                     break;
@@ -196,10 +206,6 @@ int main(int argc, char *argv[]) {
 
                 case 'i'://system definition
                     system_definition_file = strdup(optarg);
-                    break;
-
-                case 'b'://system definition
-                    blade_count = atoi(optarg);
                     break;
 
                 default:
@@ -388,7 +394,7 @@ int main(int argc, char *argv[]) {
 
                     // Fill in variables and evaluate systems:
                     in[0] = x_world + pixel_size * (rand() / (float) RAND_MAX - 0.5);
-                    in[1] = x_ap;
+                    in[1] = x_ap / anamorphic;
                     in[2] = y_ap;
 
                     system_y.evaluate(in, out);
@@ -434,6 +440,8 @@ void showUsage(char *s) {
     cout << "" << endl;
     cout << "DYLE — Polynomial Optics" << endl;
     cout << "Usage:   " << s << " sourcefile outputfile [-option] [argument]" << endl;
+    cout << "         " << "-a (fake)anamorphic" << endl;
+    cout << "         " << "-b iris blade count" << endl;
     cout << "         " << "-c curve/degree" << endl;
     cout << "         " << "-d defocus" << endl;
     cout << "         " << "-e entrance" << endl;
