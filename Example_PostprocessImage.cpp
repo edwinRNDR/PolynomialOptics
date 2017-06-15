@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <chrono>
 
 #define cimg_display 0
 
@@ -128,7 +129,7 @@ Transform4f get_system_from_file(char *filename, float lambda, int degree) {
 
 int main(int argc, char *argv[]) {
 
-
+	auto start = std::chrono::steady_clock::now();
 
     if (argc < 2) {
         showUsage(argv[0]);
@@ -218,16 +219,15 @@ int main(int argc, char *argv[]) {
     const float lambda_from = 440;
     const float lambda_to = 660;
 
-    cout << "-- config: " << endl;
-    cout << "exposure: " << exposure << endl;
-    cout << "sample-mul: " << sample_mul << endl;
-    cout << "entrance: " << r_entrance << endl;
-    cout << "defocus:" << defocus << endl;
-    cout << "lambda-count: " << num_lambdas << endl;
+    // cout << "-- config: " << endl;
+    // cout << "exposure: " << exposure << endl;
+    // cout << "sample-mul: " << sample_mul << endl;
+    // cout << "entrance: " << r_entrance << endl;
+    // cout << "defocus:" << defocus << endl;
+    // cout << "lambda-count: " << num_lambdas << endl;
     cout << "lambda-from: " << lambda_from << endl;
     cout << "lambda-to: " << lambda_to << endl;
-    cout <<
-         cout << "filter-size: " << filter_size << endl;
+	cout << "filter-size: " << filter_size << endl;
 
     // Sensor scaling
     const float sensor_width = 36;
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-    cout << " degree: " << degree << endl;
+    // cout << "degree: " << degree << endl;
     float r_pupil = r_entrance;
 
     // Focus on 550nm
@@ -432,7 +432,9 @@ int main(int argc, char *argv[]) {
     }
 
     img_out.save(out_file);
-    cout << "done!" << endl;
+	auto end = chrono::steady_clock::now();
+	double elapsed_time_ns = double(chrono::duration_cast <chrono::nanoseconds> (end - start).count());
+	cout << "" << out_file << " — " << elapsed_time_ns / 1e9 << "s elapsed." << endl;
 }
 
 
