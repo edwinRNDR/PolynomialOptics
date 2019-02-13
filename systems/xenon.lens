@@ -1,0 +1,11 @@
+two_plane
+refract_spherical -20.71 1.0 1.5814
+propagate 3.0
+refract_spherical 100000000 1.5814 1.6106
+propagate 7.0
+refract_spherical -28.0 1.6106 1.0
+propagate 1.0
+refract_spherical 100000000 1.0 1.6230
+propagate 6.0
+refract_spherical -59.55 1.6230 1.0
+

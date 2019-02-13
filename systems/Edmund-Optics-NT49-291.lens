@@ -1,0 +1,6 @@
+two_plane 5000000
+refract_spherical 51.88 1.0 N-BAF10
+propagate 20.0
+refract_spherical -32.79 N-BAF10 N-SF10
+propagate 4.50
+refract_spherical -309.45 N-SF10 1.0

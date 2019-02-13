@@ -1,0 +1,25 @@
+two_plane
+propagate 10.0
+refract_spherical 110.0 1.0 1.616
+propagate 8.4
+refract_spherical -697.0 1.616 1.0
+propagate 1.0
+refract_spherical 53.0 1.0 1.583
+propagate 18.0
+refract_spherical -81.0 1.583 S-LAL54
+propagate 2.0
+refract_spherical 10000000000.0 S-LAL54 N-PSK3
+propagate 2.0
+refract_spherical 38.0 1.5523 1.0
+propagate 20.0
+refract_spherical -39.0 1.0 N-PSK3
+propagate 2.0
+refract_spherical 1000000000.0 N-PSK3 1.6715
+propagate 2.0
+refract_spherical 45.0 1.6715 1.626
+propagate 18.0
+refract_spherical -51.0 1.626 1.0
+propagate 1.0
+refract_spherical 390.0 1.0 1.616
+propagate 7.0
+refract_spherical -88.0 1.616 1.0

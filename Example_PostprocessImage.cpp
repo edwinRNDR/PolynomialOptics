@@ -70,7 +70,7 @@ Transform4f get_system(float lambda, int degree) {
             >> refract_spherical_5(R3, glass2.get_index(lambda), 1.f, degree);
 }
 
-Transform4f get_system_from_file(char *filename, float lambda, int degree) {
+Transform4f get_system_from_file(char *filename, float lambda, int degree, float distance) {
     std::ifstream infile(filename);
     std::string line;
 
@@ -81,21 +81,18 @@ Transform4f get_system_from_file(char *filename, float lambda, int degree) {
         ls >> op;
 
         if (op == "two_plane") {
-            float d;
-            ls >> d;
-            system = two_plane_5(d, degree);
+            system = two_plane_5(distance, degree);
             //cout << "two_plane" << " " << d << endl;
-        } else if (op == "refract_spherical") {
+        }
+        else if (op == "cylindrical_x") {
             float radius;
             std::string glassName1;
             std::string glassName2;
             ls >> radius;
             ls >> glassName1;
             ls >> glassName2;
-
             float n1 = 1.0f;
             float n2 = 1.0f;
-
             if (glassName1[0] >= '0' && glassName1[0] <= '9') {
                 n1 = atof(glassName1.c_str());
 
@@ -111,8 +108,69 @@ Transform4f get_system_from_file(char *filename, float lambda, int degree) {
                 n2 = glass2.get_index(lambda);
             }
 
-            system = system >> refract_spherical_5(radius, n1, n2, degree);
-            //cout << "refract_spherical" << " " << radius << " " << n1 << " " << n2 << endl;
+            system = system >> refract_cylindrical_x_5(radius, n1, n2);
+        }
+        else if (op == "cylindrical_y") {
+            float radius;
+            std::string glassName1;
+            std::string glassName2;
+            ls >> radius;
+            ls >> glassName1;
+            ls >> glassName2;
+            float n1 = 1.0f;
+            float n2 = 1.0f;
+            if (glassName1[0] >= '0' && glassName1[0] <= '9') {
+                n1 = atof(glassName1.c_str());
+
+            } else {
+                OpticalMaterial glass1(glassName1.c_str());
+                n1 = glass1.get_index(lambda);
+            }
+
+            if (glassName2[0] >= '0' && glassName2[0] <= '9') {
+                n2 = atof(glassName2.c_str());
+            } else {
+                OpticalMaterial glass2(glassName2.c_str());
+                n2 = glass2.get_index(lambda);
+            }
+
+            system = system >> refract_cylindrical_y_5(radius, n1, n2);
+        }
+        else if (op == "reflect_spherical") {
+            float radius;
+            ls >> radius;
+            system = system >> reflect_spherical_5(radius, degree);
+        }
+        else if (op == "refract_spherical") {
+                float radius;
+                std::string glassName1;
+                std::string glassName2;
+                ls >> radius;
+                ls >> glassName1;
+                ls >> glassName2;
+
+                float n1 = 1.0f;
+                float n2 = 1.0f;
+
+                if (glassName1[0] >= '0' && glassName1[0] <= '9') {
+                    n1 = atof(glassName1.c_str());
+
+                } else {
+                    OpticalMaterial glass1(glassName1.c_str());
+                    n1 = glass1.get_index(lambda);
+                }
+
+                if (glassName2[0] >= '0' && glassName2[0] <= '9') {
+                    n2 = atof(glassName2.c_str());
+                } else {
+                    OpticalMaterial glass2(glassName2.c_str());
+                    n2 = glass2.get_index(lambda);
+                }
+
+                system = system >> refract_spherical_5(radius, n1, n2, degree);
+                //system = system >> refract_cylindrical_x_5(radius, n1, n2, degree);
+                //cout << "refract_spherical" << " " << radius << " " << n1 << " " << n2 << endl;
+
         } else if (op == "propagate") {
             float d;
             ls >> d;
@@ -148,6 +206,7 @@ int main(int argc, char *argv[]) {
     int blade_count = 0;
 	int anamorphic = 1;
     int degree = 3;
+    float distance = 5000000;
     float sample_mul = 1000;
     float r_entrance = 19.5;
     float defocus = 0.0;
@@ -162,7 +221,7 @@ int main(int argc, char *argv[]) {
     char tmp;
 
     if (argc >= 4) {
-        while ((tmp = getopt(argc - 1, &argv[1], "a:b:c:d:e:f:o:p:s:x:i:")) != -1) {
+        while ((tmp = getopt(argc - 1, &argv[1], "a:b:c:d:e:f:o:p:s:x:i:z:")) != -1) {
             switch (tmp) {
 
 				case 'a'://system definition
@@ -209,6 +268,10 @@ int main(int argc, char *argv[]) {
                     system_definition_file = strdup(optarg);
                     break;
 
+                case 'z': // distance
+                    distance = atof(optarg);
+                    break;
+
                 default:
                     showUsage(argv[0]);
                     break;
@@ -230,7 +293,7 @@ int main(int argc, char *argv[]) {
 	cout << "filter-size: " << filter_size << endl;
 
     // Sensor scaling
-    const float sensor_width = 36;
+    const float sensor_width = 80;
     const int sensor_xres = 1920;
     const int sensor_yres = 1080;
     const float sensor_scaling = sensor_xres / sensor_width;
@@ -252,7 +315,7 @@ int main(int argc, char *argv[]) {
     float r_pupil = r_entrance;
 
     // Focus on 550nm
-    Transform4f system = system_definition_file ? get_system_from_file(system_definition_file, 550, degree)
+    Transform4f system = system_definition_file ? get_system_from_file(system_definition_file, 550, degree, distance)
                                                 : get_system(550, degree);
 
 
@@ -282,10 +345,10 @@ int main(int argc, char *argv[]) {
 
     // Sample optical system at two spectral locations
     Transform4d system_spectral_center =
-            (system_definition_file ? get_system_from_file(system_definition_file, 500, 3) : get_system(500, 3))
+            (system_definition_file ? get_system_from_file(system_definition_file, 500, degree, distance) : get_system(500, degree))
                     >> prop;
     Transform4d system_spectral_right =
-            (system_definition_file ? get_system_from_file(system_definition_file, 600, degree) : get_system(600,
+            (system_definition_file ? get_system_from_file(system_definition_file, 600, degree, distance) : get_system(600,
                                                                                                              degree))
                     >> prop;
 
@@ -404,7 +467,7 @@ int main(int argc, char *argv[]) {
                     out[1] = out[1] * sensor_scaling + sensor_yres / 2;
 
                     // out[2] contains one minus square of Lambertian cosine
-                    float lambert = sqrt(1 - out[2]);
+                    float lambert = sqrt(1 - out[3]);
                     if (lambert != lambert) lambert = 0; // NaN check
 
                     img_out.set_linear_atXY(lambert * sample_weight * rgb[0 + 3 * ll], out[0], out[1], 0, 0, true);

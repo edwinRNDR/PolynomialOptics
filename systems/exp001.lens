@@ -1,0 +1,4 @@
+two_plane
+refract_spherical 50.0 1.0 S-LAL7
+propagate 40.0
+refract_spherical -50.0 S-LAL7 1.0
