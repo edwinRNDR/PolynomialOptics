@@ -467,7 +467,7 @@ int main(int argc, char *argv[]) {
                     out[1] = out[1] * sensor_scaling + sensor_yres / 2;
 
                     // out[2] contains one minus square of Lambertian cosine
-                    float lambert = sqrt(1 - out[3]);
+                    float lambert = sqrt(1 - out[2]);
                     if (lambert != lambert) lambert = 0; // NaN check
 
                     img_out.set_linear_atXY(lambert * sample_weight * rgb[0 + 3 * ll], out[0], out[1], 0, 0, true);
